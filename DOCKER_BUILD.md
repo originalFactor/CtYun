@@ -44,37 +44,27 @@ docker logs -f ctyun
 
 这种方式不需要本地安装 .NET SDK，所有构建都在容器内完成。
 
-### 1. 创建多阶段 Dockerfile
+### 选择构建方式
 
-我已经为你创建了 `Dockerfile.multistage`，内容如下：
+项目启用了 NativeAOT 编译，提供两种 Dockerfile：
 
-```dockerfile
-# 第一阶段：构建
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-WORKDIR /src
+#### A. Dockerfile.simple（推荐，构建快）
+- 禁用 NativeAOT，使用普通 .NET 运行时
+- 构建速度快，镜像稍大（~200MB）
+- 适合快速测试和日常使用
 
-# 复制项目文件
-COPY CtYun.csproj .
-RUN dotnet restore
+#### B. Dockerfile.multistage（性能优化）
+- 启用 NativeAOT，编译为原生可执行文件
+- 构建时间长（需要安装编译工具），镜像更小（~100MB）
+- 启动速度更快，内存占用更少
 
-# 复制所有源代码
-COPY . .
-RUN dotnet publish -c Release -o /app/publish
+### 1. 使用简化版构建（推荐）
 
-# 第二阶段：运行
-FROM mcr.microsoft.com/dotnet/runtime:8.0 AS runtime
-WORKDIR /app
-COPY --from=build /app/publish .
-
-ENV APP_USER=defaultuser \
-    APP_PASSWORD=defaultpass
-
-ENTRYPOINT ["dotnet", "CtYun.dll"]
+```bash
+docker build -f CtYun/Dockerfile.simple -t ctyun:latest ./CtYun
 ```
 
-### 2. 构建镜像
-
-在项目根目录执行：
+### 2. 使用 NativeAOT 版本构建
 
 ```bash
 docker build -f CtYun/Dockerfile.multistage -t ctyun:latest ./CtYun

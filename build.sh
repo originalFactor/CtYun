@@ -9,8 +9,26 @@ if ! command -v docker &> /dev/null; then
     exit 1
 fi
 
+echo "选择构建方式："
+echo "1. 简化版（推荐，构建快）"
+echo "2. NativeAOT 版（性能优化，构建慢）"
+read -p "请选择 [1/2，默认1]: " choice
+
+case $choice in
+    2)
+        echo ""
+        echo "使用 NativeAOT 版本构建（需要较长时间）..."
+        DOCKERFILE="CtYun/Dockerfile.multistage"
+        ;;
+    *)
+        echo ""
+        echo "使用简化版构建..."
+        DOCKERFILE="CtYun/Dockerfile.simple"
+        ;;
+esac
+
 echo "1. 构建 Docker 镜像..."
-docker build -f CtYun/Dockerfile.multistage -t ctyun:latest ./CtYun
+docker build -f $DOCKERFILE -t ctyun:latest ./CtYun
 
 if [ $? -eq 0 ]; then
     echo ""

@@ -11,8 +11,23 @@ if errorlevel 1 (
     exit /b 1
 )
 
+echo 选择构建方式：
+echo 1. 简化版（推荐，构建快）
+echo 2. NativeAOT 版（性能优化，构建慢）
+set /p choice="请选择 [1/2，默认1]: "
+
+if "%choice%"=="2" (
+    echo.
+    echo 使用 NativeAOT 版本构建（需要较长时间）...
+    set DOCKERFILE=CtYun/Dockerfile.multistage
+) else (
+    echo.
+    echo 使用简化版构建...
+    set DOCKERFILE=CtYun/Dockerfile.simple
+)
+
 echo 1. 构建 Docker 镜像...
-docker build -f CtYun/Dockerfile.multistage -t ctyun:latest ./CtYun
+docker build -f %DOCKERFILE% -t ctyun:latest ./CtYun
 
 if %errorlevel% equ 0 (
     echo.

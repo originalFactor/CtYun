@@ -4,7 +4,9 @@ services:
   ctyun:
     build:
       context: ./CtYun
-      dockerfile: Dockerfile.multistage
+      # 使用简化版（推荐）
+      dockerfile: Dockerfile.simple
+      # 如需性能优化，改用：dockerfile: Dockerfile.multistage
     container_name: ctyun
     environment:
       - APP_USER=${APP_USER:-你的账号}
