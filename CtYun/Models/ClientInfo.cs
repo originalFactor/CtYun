@@ -18,5 +18,7 @@ namespace CtYun.Models
     public class DesktopList
     {
         public string desktopId { get; set; }
+        public string desktopName { get; set; }
+        public string desktopStatus { get; set; }
     }
 }

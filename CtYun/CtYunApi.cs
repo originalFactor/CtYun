@@ -6,6 +6,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using CtYun.Models;
 
 namespace CtYun
 {
@@ -145,13 +146,13 @@ namespace CtYun
         }
 
 
-        public async Task<string> GetLlientListAsync()
+        public async Task<List<DesktopList>> GetLlientListAsync()
         {
             try
             {
                 var result = await GetEncryptionAsync("https://desk.ctyun.cn:8810/api/desktop/client/list");
                 var resultJson = JsonSerializer.Deserialize(result, AppJsonSerializerContext.Default.ClientInfo);
-                return resultJson.data.desktopList[0].desktopId;
+                return resultJson.data.desktopList;
             }
             catch (Exception ex)
             {

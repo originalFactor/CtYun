@@ -51,7 +51,90 @@ if (string.IsNullOrEmpty(connectText)|| connectText.IndexOf("\"desktopInfo\":nul
             Console.Write($"重试第{i+1}次。");
             continue;
         }
-        t.DesktopId= await cyApi.GetLlientListAsync();
+        
+        // 获取云电脑列表
+        var desktopList = await cyApi.GetLlientListAsync();
+        if (desktopList == null || desktopList.Count == 0)
+        {
+            Console.WriteLine("未找到可用的云电脑");
+            return;
+        }
+
+        // 选择要保活的云电脑
+        if (IsRunningInContainer())
+        {
+            // Docker环境：使用环境变量选择
+            var desktopId = Environment.GetEnvironmentVariable("DESKTOP_ID");
+            var desktopIndex = Environment.GetEnvironmentVariable("DESKTOP_INDEX");
+            
+            if (!string.IsNullOrEmpty(desktopId))
+            {
+                // 通过ID选择
+                var desktop = desktopList.FirstOrDefault(d => d.desktopId == desktopId);
+                if (desktop != null)
+                {
+                    t.DesktopId = desktop.desktopId;
+                    Console.WriteLine($"已选择云电脑 ID: {t.DesktopId}");
+                }
+                else
+                {
+                    Console.WriteLine($"错误：未找到 ID 为 {desktopId} 的云电脑");
+                    return;
+                }
+            }
+            else if (!string.IsNullOrEmpty(desktopIndex) && int.TryParse(desktopIndex, out int index))
+            {
+                // 通过索引选择（从1开始）
+                if (index > 0 && index <= desktopList.Count)
+                {
+                    t.DesktopId = desktopList[index - 1].desktopId;
+                    Console.WriteLine($"已选择第 {index} 台云电脑，ID: {t.DesktopId}");
+                }
+                else
+                {
+                    Console.WriteLine($"错误：索引 {index} 超出范围（1-{desktopList.Count}）");
+                    return;
+                }
+            }
+            else
+            {
+                // 默认选择第一台
+                t.DesktopId = desktopList[0].desktopId;
+                Console.WriteLine($"未设置 DESKTOP_ID 或 DESKTOP_INDEX，默认选择第一台云电脑，ID: {t.DesktopId}");
+            }
+        }
+        else
+        {
+            // Windows环境：交互式选择
+            Console.WriteLine("\n可用的云电脑列表：");
+            for (int j = 0; j < desktopList.Count; j++)
+            {
+                var desktop = desktopList[j];
+                Console.WriteLine($"{j + 1}. ID: {desktop.desktopId} | 名称: {desktop.desktopName ?? "未命名"} | 状态: {desktop.desktopStatus ?? "未知"}");
+            }
+            
+            if (desktopList.Count == 1)
+            {
+                t.DesktopId = desktopList[0].desktopId;
+                Console.WriteLine($"只有一台云电脑，自动选择 ID: {t.DesktopId}");
+            }
+            else
+            {
+                Console.Write($"\n请选择要保活的云电脑（输入序号 1-{desktopList.Count}）：");
+                var input = Console.ReadLine();
+                if (int.TryParse(input, out int selectedIndex) && selectedIndex > 0 && selectedIndex <= desktopList.Count)
+                {
+                    t.DesktopId = desktopList[selectedIndex - 1].desktopId;
+                    Console.WriteLine($"已选择云电脑 ID: {t.DesktopId}");
+                }
+                else
+                {
+                    Console.WriteLine("输入无效，默认选择第一台");
+                    t.DesktopId = desktopList[0].desktopId;
+                }
+            }
+        }
+        
         connectText = await cyApi.ConnectAsync();
         File.WriteAllText("connect.txt", connectText);
         break;
