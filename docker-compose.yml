@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  ctyun:
+    build:
+      context: ./CtYun
+      dockerfile: Dockerfile.multistage
+    container_name: ctyun
+    environment:
+      - APP_USER=${APP_USER:-你的账号}
+      - APP_PASSWORD=${APP_PASSWORD:-你的密码}
+      - DESKTOP_INDEX=${DESKTOP_INDEX:-1}
+      - LOAD_CACHE=${LOAD_CACHE:-1}
+    volumes:
+      - ./cache:/app
+    restart: unless-stopped

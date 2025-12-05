@@ -1,0 +1,21 @@
+# 第一阶段：构建
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+
+# 复制项目文件
+COPY CtYun.csproj .
+RUN dotnet restore
+
+# 复制所有源代码
+COPY . .
+RUN dotnet publish -c Release -o /app/publish
+
+# 第二阶段：运行
+FROM mcr.microsoft.com/dotnet/runtime:8.0 AS runtime
+WORKDIR /app
+COPY --from=build /app/publish .
+
+ENV APP_USER=defaultuser \
+    APP_PASSWORD=defaultpass
+
+ENTRYPOINT ["dotnet", "CtYun.dll"]
